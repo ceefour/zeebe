@@ -16,12 +16,14 @@ import io.zeebe.engine.processor.TypedRecordProcessor;
 import io.zeebe.engine.processor.TypedResponseWriter;
 import io.zeebe.engine.processor.TypedStreamWriter;
 import io.zeebe.engine.processor.workflow.CatchEventBehavior;
+import io.zeebe.engine.processor.workflow.ExpressionProcessor;
 import io.zeebe.engine.processor.workflow.deployment.model.element.ExecutableCatchEventElement;
 import io.zeebe.engine.processor.workflow.deployment.model.element.ExecutableStartEvent;
 import io.zeebe.engine.processor.workflow.deployment.transform.DeploymentTransformer;
 import io.zeebe.engine.state.ZeebeState;
 import io.zeebe.engine.state.deployment.WorkflowState;
 import io.zeebe.engine.state.instance.TimerInstance;
+import io.zeebe.model.bpmn.util.time.Timer;
 import io.zeebe.protocol.impl.record.value.deployment.DeploymentRecord;
 import io.zeebe.protocol.impl.record.value.deployment.Workflow;
 import io.zeebe.protocol.record.RejectionType;
@@ -40,13 +42,17 @@ public final class TransformingDeploymentCreateProcessor
   private final WorkflowState workflowState;
   private final CatchEventBehavior catchEventBehavior;
   private final KeyGenerator keyGenerator;
+  private final ExpressionProcessor expressionProcessor;
 
   public TransformingDeploymentCreateProcessor(
-      final ZeebeState zeebeState, final CatchEventBehavior catchEventBehavior) {
+      final ZeebeState zeebeState,
+      final CatchEventBehavior catchEventBehavior,
+      final ExpressionProcessor expressionProcessor) {
     this.workflowState = zeebeState.getWorkflowState();
     this.keyGenerator = zeebeState.getKeyGenerator();
     this.deploymentTransformer = new DeploymentTransformer(zeebeState);
     this.catchEventBehavior = catchEventBehavior;
+    this.expressionProcessor = expressionProcessor;
   }
 
   @Override
@@ -96,12 +102,14 @@ public final class TransformingDeploymentCreateProcessor
         if (startEvent.isTimer()) {
           hasAtLeastOneTimer = true;
 
+          final Timer timer =
+              startEvent.getTimerFactory().apply(expressionProcessor, record.getKey());
           catchEventBehavior.subscribeToTimerEvent(
               NO_ELEMENT_INSTANCE,
               NO_ELEMENT_INSTANCE,
               workflow.getKey(),
               startEvent.getId(),
-              startEvent.getTimer(),
+              timer,
               streamWriter);
         }
       }

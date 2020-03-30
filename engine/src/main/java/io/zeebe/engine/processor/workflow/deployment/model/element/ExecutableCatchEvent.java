@@ -29,8 +29,6 @@ public interface ExecutableCatchEvent extends ExecutableFlowElement {
     return true;
   }
 
-  Timer getTimer();
-
   BiFunction<ExpressionProcessor, Long, Timer> getTimerFactory();
 
   ExecutableError getError();

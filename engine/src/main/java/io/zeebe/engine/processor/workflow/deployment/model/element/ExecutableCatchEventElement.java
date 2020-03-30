@@ -20,7 +20,6 @@ public class ExecutableCatchEventElement extends ExecutableFlowNode
   private final List<ExecutableCatchEvent> events = Collections.singletonList(this);
 
   private ExecutableMessage message;
-  private Timer timer;
   private ExecutableError error;
   private boolean interrupting;
   private BiFunction<ExpressionProcessor, Long, Timer> timerFactory;
@@ -51,15 +50,6 @@ public class ExecutableCatchEventElement extends ExecutableFlowNode
 
   public void setMessage(final ExecutableMessage message) {
     this.message = message;
-  }
-
-  @Override
-  public Timer getTimer() {
-    return timer;
-  }
-
-  public void setTimer(final Timer timer) {
-    this.timer = timer;
   }
 
   @Override

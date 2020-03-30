@@ -21,10 +21,8 @@ import io.zeebe.model.bpmn.instance.EventDefinition;
 import io.zeebe.model.bpmn.instance.Message;
 import io.zeebe.model.bpmn.instance.MessageEventDefinition;
 import io.zeebe.model.bpmn.instance.TimerEventDefinition;
-import io.zeebe.model.bpmn.util.time.Interval;
 import io.zeebe.model.bpmn.util.time.RepeatingInterval;
 import io.zeebe.model.bpmn.util.time.TimeDateTimer;
-import io.zeebe.model.bpmn.util.time.Timer;
 import io.zeebe.protocol.record.intent.WorkflowInstanceIntent;
 import io.zeebe.util.buffer.BufferUtil;
 import java.util.List;
@@ -86,36 +84,20 @@ public final class CatchEventTransformer implements ModelElementTransformer<Catc
       final ExecutableCatchEventElement executableElement,
       final TimerEventDefinition timerEventDefinition) {
 
-    final Timer timer; // todo: remove this timer when start events have feel expression support
     final Expression expression;
     final TimerType type;
     if (timerEventDefinition.getTimeDuration() != null) {
       final String duration = timerEventDefinition.getTimeDuration().getTextContent();
       expression = expressionLanguage.parseExpression(duration);
       type = TimerType.DURATION;
-      if (expression.isStatic()) {
-        timer = new RepeatingInterval(1, Interval.parse(expression.getExpression()));
-      } else {
-        timer = null;
-      }
     } else if (timerEventDefinition.getTimeCycle() != null) {
       final String cycle = timerEventDefinition.getTimeCycle().getTextContent();
       expression = expressionLanguage.parseExpression(cycle);
       type = TimerType.CYCLE;
-      if (expression.isStatic()) {
-        timer = RepeatingInterval.parse(expression.getExpression());
-      } else {
-        timer = null;
-      }
     } else {
       final String timeDate = timerEventDefinition.getTimeDate().getTextContent();
       expression = expressionLanguage.parseExpression(timeDate);
       type = TimerType.TIME_DATE;
-      if (expression.isStatic()) {
-        timer = TimeDateTimer.parse(expression.getExpression());
-      } else {
-        timer = null;
-      }
     }
 
     executableElement.setTimerFactory(
@@ -132,9 +114,9 @@ public final class CatchEventTransformer implements ModelElementTransformer<Catc
                   .map(RepeatingInterval::parse)
                   .orElseThrow();
             case TIME_DATE:
-              return Optional.of(
-                      expressionProcessor.evaluateIntervalExpression(expression, scopeKey))
-                  .map(TimeDateTimer::new)
+              return Optional.of(expressionProcessor.evaluateStringExpression(expression, scopeKey))
+                  .map(BufferUtil::bufferAsString)
+                  .map(TimeDateTimer::parse)
                   .orElseThrow();
             default:
               final var expectedTypes =
@@ -143,8 +125,6 @@ public final class CatchEventTransformer implements ModelElementTransformer<Catc
                   "Unexpected timer type '" + type + "'; expected one of " + expectedTypes);
           }
         });
-
-    executableElement.setTimer(timer);
   }
 
   private void transformErrorEventDefinition(
