@@ -33,9 +33,7 @@ public final class DeploymentEventProcessors {
       final TypedRecordProcessors typedRecordProcessors,
       final ZeebeState zeebeState,
       final CatchEventBehavior catchEventBehavior) {
-    typedRecordProcessors.onCommand(
-        ValueType.DEPLOYMENT,
-        CREATE,
-        new TransformingDeploymentCreateProcessor(zeebeState, catchEventBehavior));
+    final var processor = new TransformingDeploymentCreateProcessor(zeebeState, catchEventBehavior);
+    typedRecordProcessors.onCommand(ValueType.DEPLOYMENT, CREATE, processor);
   }
 }

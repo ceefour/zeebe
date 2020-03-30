@@ -19,10 +19,6 @@ import io.zeebe.model.bpmn.instance.TimeCycle;
 import io.zeebe.model.bpmn.instance.TimeDate;
 import io.zeebe.model.bpmn.instance.TimeDuration;
 import io.zeebe.model.bpmn.instance.TimerEventDefinition;
-import io.zeebe.model.bpmn.util.time.Interval;
-import io.zeebe.model.bpmn.util.time.RepeatingInterval;
-import io.zeebe.model.bpmn.util.time.TimeDateTimer;
-import java.time.format.DateTimeParseException;
 import org.camunda.bpm.model.xml.validation.ModelElementValidator;
 import org.camunda.bpm.model.xml.validation.ValidationResultCollector;
 
@@ -65,28 +61,31 @@ public class TimerEventDefinitionValidator implements ModelElementValidator<Time
 
   private void validateTimeDate(
       final TimeDate timeDate, final ValidationResultCollector validationResultCollector) {
-    try {
-      TimeDateTimer.parse(timeDate.getTextContent());
-    } catch (final DateTimeParseException e) {
-      validationResultCollector.addError(0, "Time date is invalid");
-    }
+    //    try {
+    //      TimeDateTimer.parse(timeDate.getTextContent());
+    //    } catch (final DateTimeParseException e) {
+    //      validationResultCollector.addError(0, "Time date is invalid");
+    //      // TODO re-enable validation
+    //    }
   }
 
   private void validateTimeCycle(
       final ValidationResultCollector validationResultCollector, final TimeCycle timeCycle) {
-    try {
-      RepeatingInterval.parse(timeCycle.getTextContent());
-    } catch (final DateTimeParseException e) {
-      validationResultCollector.addError(0, "Time cycle is invalid");
-    }
+    //    try {
+    //      RepeatingInterval.parse(timeCycle.getTextContent());
+    //    } catch (final DateTimeParseException e) {
+    //      validationResultCollector.addError(0, "Time cycle is invalid");
+    //      // TODO re-enable validation
+    //    }
   }
 
   private void validateTimeDuration(
       final ValidationResultCollector validationResultCollector, final TimeDuration timeDuration) {
-    try {
-      Interval.parse(timeDuration.getTextContent());
-    } catch (final DateTimeParseException e) {
-      validationResultCollector.addError(0, "Time duration is invalid");
-    }
+    //    try {
+    //      Interval.parse(timeDuration.getTextContent());
+    //    } catch (final DateTimeParseException e) {
+    //      validationResultCollector.addError(0, "Time duration is invalid");
+    //      // TODO re-enable validation
+    //    }
   }
 }

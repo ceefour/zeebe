@@ -7,7 +7,9 @@
  */
 package io.zeebe.engine.processor.workflow.deployment.model.element;
 
+import io.zeebe.engine.processor.workflow.ExpressionProcessor;
 import io.zeebe.model.bpmn.util.time.Timer;
+import java.util.function.BiFunction;
 
 public interface ExecutableCatchEvent extends ExecutableFlowElement {
 
@@ -28,6 +30,8 @@ public interface ExecutableCatchEvent extends ExecutableFlowElement {
   }
 
   Timer getTimer();
+
+  BiFunction<ExpressionProcessor, Long, Timer> getTimerFactory();
 
   ExecutableError getError();
 }

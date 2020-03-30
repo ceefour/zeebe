@@ -17,6 +17,7 @@ import io.zeebe.el.ResultType;
 import io.zeebe.engine.processor.workflow.message.MessageCorrelationKeyContext;
 import io.zeebe.engine.processor.workflow.message.MessageCorrelationKeyException;
 import io.zeebe.engine.state.instance.VariablesState;
+import io.zeebe.model.bpmn.util.time.Interval;
 import io.zeebe.protocol.record.value.ErrorType;
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +60,31 @@ public final class ExpressionProcessor {
   }
 
   /**
+   * Evaluates the given expression and returns the result as string wrapped in {@link
+   * DirectBuffer}. If the evaluation fails or the result is not a string then an exception is
+   * thrown.
+   *
+   * @param expression the expression to evaluate
+   * @param scopeKey the scope to load the variables from
+   * @return the evaluation result as buffer
+   * @throws EvaluationException if expression evaluation failed
+   */
+  public DirectBuffer evaluateStringExpression(final Expression expression, final long scopeKey) {
+
+    final var evaluationResult = evaluateExpression(expression, scopeKey);
+    if (evaluationResult.isFailure()) {
+      throw new EvaluationException(evaluationResult.getFailureMessage());
+    }
+    if (!evaluationResult.getType().equals(ResultType.STRING)) {
+      throw new EvaluationException(
+          String.format(
+              "Expected result of the expression '%s' to be '%s', but was '%s'.",
+              evaluationResult.getExpression(), ResultType.STRING, evaluationResult.getType()));
+    }
+    return wrapResult(evaluationResult.getString());
+  }
+
+  /**
    * Evaluates the given expression and returns the result as long. If the evaluation fails or the
    * result is not a number then an incident is raised.
    *
@@ -93,6 +119,27 @@ public final class ExpressionProcessor {
         .flatMap(
             result -> typeCheck(result, ResultType.BOOLEAN, ErrorType.EXTRACT_VALUE_ERROR, context))
         .map(EvaluationResult::getBoolean);
+  }
+
+  public Interval evaluateIntervalExpression(final Expression expression, final long scopeKey) {
+    final var result = evaluateExpression(expression, scopeKey);
+    if (result.isFailure()) {
+      throw new EvaluationException(result.getFailureMessage());
+    }
+    switch (result.getType()) {
+      case DURATION:
+        return new Interval(result.getDuration());
+      case PERIOD:
+        return new Interval(result.getPeriod());
+      case STRING:
+        return Interval.parse(result.getString());
+      default:
+        final var expected = List.of(ResultType.DURATION, ResultType.PERIOD, ResultType.STRING);
+        throw new EvaluationException(
+            String.format(
+                "Expected result of the expression '%s' to be one of '%s', but was '%s'",
+                expression.getExpression(), expected, result.getType()));
+    }
   }
 
   /**
@@ -258,6 +305,29 @@ public final class ExpressionProcessor {
       variableNameBuffer.wrap(variableName.getBytes());
 
       return variablesState.getVariable(variableScopeKey, variableNameBuffer);
+    }
+  }
+
+  private static final class EvaluationException extends RuntimeException {
+
+    public EvaluationException(final String message) {
+      super(message);
+    }
+
+    public EvaluationException(final String message, final Throwable cause) {
+      super(message, cause);
+    }
+
+    public EvaluationException(final Throwable cause) {
+      super(cause);
+    }
+
+    public EvaluationException(
+        final String message,
+        final Throwable cause,
+        final boolean enableSuppression,
+        final boolean writableStackTrace) {
+      super(message, cause, enableSuppression, writableStackTrace);
     }
   }
 }

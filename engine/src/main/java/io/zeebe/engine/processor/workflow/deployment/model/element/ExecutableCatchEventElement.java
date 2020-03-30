@@ -7,10 +7,12 @@
  */
 package io.zeebe.engine.processor.workflow.deployment.model.element;
 
+import io.zeebe.engine.processor.workflow.ExpressionProcessor;
 import io.zeebe.model.bpmn.util.time.Timer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import org.agrona.DirectBuffer;
 
 public class ExecutableCatchEventElement extends ExecutableFlowNode
@@ -21,6 +23,7 @@ public class ExecutableCatchEventElement extends ExecutableFlowNode
   private Timer timer;
   private ExecutableError error;
   private boolean interrupting;
+  private BiFunction<ExpressionProcessor, Long, Timer> timerFactory;
 
   public ExecutableCatchEventElement(final String id) {
     super(id);
@@ -28,7 +31,7 @@ public class ExecutableCatchEventElement extends ExecutableFlowNode
 
   @Override
   public boolean isTimer() {
-    return timer != null;
+    return timerFactory != null;
   }
 
   @Override
@@ -57,6 +60,15 @@ public class ExecutableCatchEventElement extends ExecutableFlowNode
 
   public void setTimer(final Timer timer) {
     this.timer = timer;
+  }
+
+  @Override
+  public BiFunction<ExpressionProcessor, Long, Timer> getTimerFactory() {
+    return timerFactory;
+  }
+
+  public void setTimerFactory(final BiFunction<ExpressionProcessor, Long, Timer> timerFactory) {
+    this.timerFactory = timerFactory;
   }
 
   @Override

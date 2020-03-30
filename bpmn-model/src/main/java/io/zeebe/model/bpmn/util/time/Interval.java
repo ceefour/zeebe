@@ -46,6 +46,14 @@ public class Interval implements TemporalAmount {
     this.units.addAll(duration.getUnits());
   }
 
+  public Interval(final Duration duration) {
+    this(null, duration);
+  }
+
+  public Interval(final Period period) {
+    this(period, null);
+  }
+
   public Period getPeriod() {
     return period;
   }

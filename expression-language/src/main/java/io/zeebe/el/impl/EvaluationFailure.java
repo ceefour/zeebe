@@ -10,6 +10,8 @@ package io.zeebe.el.impl;
 import io.zeebe.el.EvaluationResult;
 import io.zeebe.el.Expression;
 import io.zeebe.el.ResultType;
+import java.time.Duration;
+import java.time.Period;
 import java.util.List;
 import org.agrona.DirectBuffer;
 
@@ -60,6 +62,16 @@ public final class EvaluationFailure implements EvaluationResult {
 
   @Override
   public Number getNumber() {
+    return null;
+  }
+
+  @Override
+  public Duration getDuration() {
+    return null;
+  }
+
+  @Override
+  public Period getPeriod() {
     return null;
   }
 
